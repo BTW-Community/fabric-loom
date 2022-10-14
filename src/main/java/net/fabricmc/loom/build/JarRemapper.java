@@ -25,6 +25,7 @@
 package net.fabricmc.loom.build;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,6 +43,8 @@ import net.fabricmc.tinyremapper.IMappingProvider;
 import net.fabricmc.tinyremapper.InputTag;
 import net.fabricmc.tinyremapper.OutputConsumerPath;
 import net.fabricmc.tinyremapper.TinyRemapper;
+
+import javax.activation.FileDataSource;
 
 public class JarRemapper {
 	private final List<IMappingProvider> mappingProviders = new ArrayList<>();
@@ -92,6 +95,7 @@ public class JarRemapper {
 		List<OutputConsumerPath> outputConsumers = new ArrayList<>();
 
 		for (RemapData data : remapData) {
+			Files.deleteIfExists(data.output);
 			OutputConsumerPath outputConsumer = new OutputConsumerPath.Builder(data.output).build();
 			outputConsumers.add(outputConsumer);
 

@@ -108,6 +108,7 @@ license {
 	include "**/*.groovy"
 	exclude '**/loom/util/DownloadUtil.java'
 	exclude '**/projects'
+	exclude '**/ReobfuscateJarTask.java'
 }
 
 checkstyle {

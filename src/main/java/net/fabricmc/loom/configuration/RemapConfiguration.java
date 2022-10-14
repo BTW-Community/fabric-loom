@@ -27,6 +27,9 @@ package net.fabricmc.loom.configuration;
 import java.io.IOException;
 
 import com.google.common.base.Preconditions;
+
+import net.fabricmc.loom.task.*;
+
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.UnknownTaskException;
@@ -37,10 +40,6 @@ import org.jetbrains.annotations.ApiStatus;
 import net.fabricmc.loom.LoomGradleExtension;
 import net.fabricmc.loom.build.JarRemapper;
 import net.fabricmc.loom.build.nesting.NestedDependencyProvider;
-import net.fabricmc.loom.task.AbstractLoomTask;
-import net.fabricmc.loom.task.RemapAllSourcesTask;
-import net.fabricmc.loom.task.RemapJarTask;
-import net.fabricmc.loom.task.RemapSourcesJarTask;
 import net.fabricmc.loom.util.SourceRemapper;
 
 public class RemapConfiguration {
@@ -57,7 +56,7 @@ public class RemapConfiguration {
 
 	@ApiStatus.Experimental // This is only an api if you squint really hard, expect it to explode every 5 mins. If you must call in afterEvaluate on all projects
 	public static void setupRemap(Project project, String jarTaskName, String sourcesJarTaskName, String remapJarTaskName, String remapSourcesJarTaskName, String remapAllJarsTaskName, String remapAllSourcesTaskName) {
-		setupRemap(project, false, jarTaskName, sourcesJarTaskName, remapJarTaskName, remapSourcesJarTaskName, remapAllJarsTaskName, remapAllSourcesTaskName);
+		setupRemap(project, true, jarTaskName, sourcesJarTaskName, remapJarTaskName, remapSourcesJarTaskName, remapAllJarsTaskName, remapAllSourcesTaskName);
 	}
 
 	// isDefaultRemap is set to true for the standard remap task, some defaults are left out when this is false.
@@ -87,6 +86,11 @@ public class RemapConfiguration {
 
 		// TODO this might be wrong?
 		project.getTasks().withType(RemapJarTask.class).forEach(task -> {
+			if (task.getAddNestedDependencies().getOrElse(false)) {
+				NestedDependencyProvider.getRequiredTasks(project).forEach(task::dependsOn);
+			}
+		});
+		project.getTasks().withType(ReobfuscateJarTask.class).forEach(task -> {
 			if (task.getAddNestedDependencies().getOrElse(false)) {
 				NestedDependencyProvider.getRequiredTasks(project).forEach(task::dependsOn);
 			}

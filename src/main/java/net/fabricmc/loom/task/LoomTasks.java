@@ -53,6 +53,11 @@ public final class LoomTasks {
 			t.setGroup("fabric");
 		});
 
+		tasks.register("reobfuscateJar", ReobfuscateJarTask.class, t -> {
+			t.setDescription("Remaps the built project jar to obfuscated mappings.");
+			t.setGroup("fabric");
+		});
+
 		tasks.register("downloadAssets", DownloadAssetsTask.class, t -> t.setDescription("Downloads required assets for Fabric."));
 		tasks.register("remapSourcesJar", RemapSourcesJarTask.class, t -> t.setDescription("Remaps the project sources jar to intermediary names."));
 

@@ -44,6 +44,7 @@ import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.jvm.tasks.Jar;
 import org.jetbrains.annotations.ApiStatus;
@@ -72,7 +73,7 @@ public class RemapJarTask extends Jar {
 	private final Property<Boolean> addNestedDependencies;
 	private final Property<Boolean> addDefaultNestedDependencies;
 	private final Property<Boolean> remapAccessWidener;
-	private final List<Action<TinyRemapper.Builder>> remapOptions = new ArrayList<>();
+	protected final List<Action<TinyRemapper.Builder>> remapOptions = new ArrayList<>();
 	public JarRemapper jarRemapper;
 	private FileCollection classpath;
 	private final Set<Object> nestedPaths = new LinkedHashSet<>();
@@ -121,7 +122,6 @@ public class RemapJarTask extends Jar {
 
 		if (isMainRemapTask) {
 			jarRemapper.addToClasspath(getRemapClasspath());
-
 			jarRemapper.addMappings(TinyRemapperMappingsHelper.create(mappingsProvider.getMappings(), fromM, toM, false));
 		}
 
@@ -188,8 +188,8 @@ public class RemapJarTask extends Jar {
 					}
 				});
 	}
-
-	private NestedJarProvider getNestedJarProvider() {
+	@Internal
+	protected NestedJarProvider getNestedJarProvider() {
 		Configuration includeConfiguration = getProject().getConfigurations().getByName(Constants.Configurations.INCLUDE);
 
 		if (!addDefaultNestedDependencies.getOrElse(true)) {
@@ -207,8 +207,8 @@ public class RemapJarTask extends Jar {
 				new NestedJarPathProvider(nestedPaths)
 		);
 	}
-
-	private Path[] getRemapClasspath() {
+	@Internal
+	protected Path[] getRemapClasspath() {
 		FileCollection files = this.classpath;
 
 		if (files == null) {

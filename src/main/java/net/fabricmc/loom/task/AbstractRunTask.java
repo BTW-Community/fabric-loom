@@ -25,6 +25,7 @@
 package net.fabricmc.loom.task;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -50,6 +51,9 @@ public abstract class AbstractRunTask extends JavaExec {
 	@Override
 	public void exec() {
 		List<String> argsSplit = new ArrayList<>();
+		getProject().getLogger().warn(String.valueOf(getProject().getProjectDir().toPath().resolve("run")));
+		config.programArgs = config.programArgs + " --gameDir " + getProject().getProjectDir().toPath().resolve("run");
+		getLogger().warn(config.programArgs);
 		String[] args = config.programArgs.split(" ");
 		int partPos = -1;
 

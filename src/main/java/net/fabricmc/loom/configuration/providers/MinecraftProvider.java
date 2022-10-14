@@ -24,16 +24,21 @@
 
 package net.fabricmc.loom.configuration.providers;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.StandardCopyOption;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipFile;
 
 import com.google.common.io.Files;
 import com.google.gson.GsonBuilder;
+import org.eclipse.jdt.core.util.IExceptionAttribute;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
@@ -47,6 +52,8 @@ import net.fabricmc.loom.util.Constants;
 import net.fabricmc.loom.util.DownloadUtil;
 import net.fabricmc.loom.util.HashedDownloadUtil;
 import net.fabricmc.stitch.merge.JarMerger;
+
+import org.gradle.internal.impldep.org.apache.http.client.entity.GZIPInputStreamFactory;
 
 public class MinecraftProvider extends DependencyProvider {
 	private String minecraftVersion;
@@ -83,7 +90,7 @@ public class MinecraftProvider extends DependencyProvider {
 
 		if (offline) {
 			if (minecraftClientJar.exists() && minecraftServerJar.exists()) {
-				getProject().getLogger().debug("Found client and server jars, presuming up-to-date");
+				getProject().getLogger().warn("Found client and server jars, presuming up-to-date");
 			} else if (minecraftMergedJar.exists()) {
 				//Strictly we don't need the split jars if the merged one exists, let's try go on
 				getProject().getLogger().warn("Missing game jar but merged jar present, things might end badly");
@@ -95,6 +102,8 @@ public class MinecraftProvider extends DependencyProvider {
 		}
 
 		libraryProvider = new MinecraftLibraryProvider();
+
+		getProject().getLogger().warn(":providing libraries");
 		libraryProvider.provide(this, getProject());
 
 		if (!minecraftMergedJar.exists() || isRefreshDeps()) {
@@ -136,7 +145,17 @@ public class MinecraftProvider extends DependencyProvider {
 			}
 		} else {
 			getProject().getLogger().debug("Downloading version manifests");
-			DownloadUtil.downloadIfChanged(new URL(Constants.VERSION_MANIFESTS), versionManifestJson, getProject().getLogger());
+			File versionManifestCompressed = new File(getExtension().getUserCache(), "version_manifest.zip");
+			//DownloadUtil.downloadIfChanged(new URL(Constants.VERSION_MANIFESTS), versionManifestJson, getProject().getLogger());
+			DownloadUtil.downloadIfChanged(new URL(Constants.VERSION_MANIFESTS), versionManifestCompressed, getProject().getLogger());
+			getProject().getLogger().debug("1 " + versionManifestCompressed.toURI().toString());
+			GZIPInputStream gzis = new GZIPInputStream(java.nio.file.Files.newInputStream(versionManifestCompressed.toPath()));
+			FileOutputStream os = new FileOutputStream(versionManifestJson);
+			int i = gzis.read();
+			while (i != -1) {
+				os.write(i);
+				i = gzis.read();
+			}
 		}
 
 		String versionManifest = Files.asCharSource(versionManifestJson, StandardCharsets.UTF_8).read();
@@ -217,11 +236,13 @@ public class MinecraftProvider extends DependencyProvider {
 	}
 
 	private void mergeJars(Logger logger) throws IOException {
-		logger.info(":merging jars");
+		logger.warn(":merging jars");
 
 		try (JarMerger jarMerger = new JarMerger(minecraftClientJar, minecraftServerJar, minecraftMergedJar)) {
 			jarMerger.enableSyntheticParamsOffset();
+			logger.warn(":starting merge");
 			jarMerger.merge();
+			logger.warn(":finished merge");
 		}
 	}
 

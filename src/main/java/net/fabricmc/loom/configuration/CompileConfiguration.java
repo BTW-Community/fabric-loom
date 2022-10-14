@@ -131,6 +131,7 @@ public final class CompileConfiguration {
 			// Enables the default mod remapper
 			if (extension.remapMod) {
 				RemapConfiguration.setupDefaultRemap(project);
+				RemapConfiguration.setupRemap(project, JavaPlugin.JAR_TASK_NAME, "sourcesJar", "reobfuscateJar", "remapSourcesJar", "remapAllJars", "remapAllSources");
 			} else {
 				AbstractArchiveTask jarTask = (AbstractArchiveTask) project.getTasks().getByName("jar");
 				extension.getUnmappedModCollection().from(jarTask);

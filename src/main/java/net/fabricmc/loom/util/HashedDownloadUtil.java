@@ -30,6 +30,8 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 import javax.annotation.Nullable;
 
@@ -60,7 +62,7 @@ public class HashedDownloadUtil {
 		startDownload.run();
 
 		HttpURLConnection connection = (HttpURLConnection) from.openConnection();
-		connection.setRequestProperty("Accept-Encoding", "gzip");
+		//connection.setRequestProperty("Accept-Encoding", "gzip");
 		connection.connect();
 
 		int code = connection.getResponseCode();

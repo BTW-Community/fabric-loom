@@ -35,6 +35,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.gson.JsonObject;
+
+import net.fabricmc.loom.task.ReobfuscateJarTask;
+
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -89,6 +92,11 @@ public final class NestedDependencyProvider implements NestedJarProvider {
 						remapTasks.add((RemapJarTask) task);
 					}
 				}
+				for (Task task : dependencyProject.getTasksByName("reobfuscateJar", false)) {
+					if (task instanceof ReobfuscateJarTask) {
+						remapTasks.add((ReobfuscateJarTask) task);
+					}
+				}
 			}
 		}
 
@@ -107,12 +115,16 @@ public final class NestedDependencyProvider implements NestedJarProvider {
 
 				// TODO change this to allow just normal jar tasks, so a project can have a none loom sub project
 				Collection<Task> remapJarTasks = dependencyProject.getTasksByName("remapJar", false);
+				remapJarTasks.addAll(dependencyProject.getTasksByName("reobfuscateJar", false));
 				Collection<Task> jarTasks = dependencyProject.getTasksByName("jar", false);
 
 				for (Task task : remapJarTasks.isEmpty() ? jarTasks : remapJarTasks) {
 					if (task instanceof RemapJarTask) {
 						File file = ((RemapJarTask) task).getArchivePath();
-						fileList.add(new DependencyInfo<>(projectDependency, new ProjectDependencyMetaExtractor(), file));
+
+						if (fileList.stream().noneMatch(projectDependencyDependencyInfo -> projectDependencyDependencyInfo.file.equals(file))) {
+							fileList.add(new DependencyInfo<>(projectDependency, new ProjectDependencyMetaExtractor(), file));
+						}
 					} else if (task instanceof AbstractArchiveTask) {
 						File file = ((AbstractArchiveTask) task).getArchivePath();
 						fileList.add(new DependencyInfo<>(projectDependency, new ProjectDependencyMetaExtractor(), file));
